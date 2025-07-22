@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Controle de Estoque</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <script>
+      ;(function () {
+        const theme = localStorage.getItem('theme')
+        if (theme === 'dark') {
+          document.body.classList.add('dark-mode')
+        } else if (theme === 'light') {
+          document.body.classList.remove('dark-mode')
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.body.classList.add('dark-mode')
+        }
+      })()
+    </script>
+    <div class="container" style="max-width: 450px; margin-top: 5rem">
+      <h1>Login</h1>
+      <form id="login-form">
+        <div style="margin-bottom: 1rem">
+          <label for="username">Usuário:</label>
+          <input type="text" id="username" required />
+        </div>
+        <div style="margin-bottom: 1.5rem">
+          <label for="password">Senha:</label>
+          <input type="password" id="password" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%">Entrar</button>
+      </form>
+      <p
+        id="error-message"
+        style="color: var(--danger-color); text-align: center; margin-top: 1rem"
+      ></p>
+    </div>
+    <script src="login.js"></script>
+  </body>
+</html>

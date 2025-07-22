@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Controle de Estoque Simples</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <script>
+      ;(function () {
+        const theme = localStorage.getItem('theme')
+        if (theme === 'dark') {
+          document.body.classList.add('dark-mode')
+        } else if (theme === 'light') {
+          document.body.classList.remove('dark-mode')
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.body.classList.add('dark-mode')
+        }
+      })()
+    </script>
+
+    <div class="container">
+      <h1>Controle de Estoque</h1>
+
+      <div class="search-container">
+        <input type="text" id="search-input" placeholder="Pesquisar por nome do produto..." />
+      </div>
+
+      <table class="stock-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Produto</th>
+            <th>Unidade</th>
+            <th>Estoque Atual</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="stock-table-body"></tbody>
+      </table>
+    </div>
+
+    <div id="edit-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Alterar Estoque</h2>
+        <p>Produto: <strong id="modal-product-name">Nome do Produto</strong></p>
+
+        <form id="edit-stock-form">
+          <label for="new-stock-input">Novo valor do estoque:</label>
+          <input
+            type="number"
+            id="new-stock-input"
+            placeholder="Digite a nova quantidade"
+            step="any"
+            required
+          />
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary cancel-button">Cancelar</button>
+            <button type="submit" class="btn btn-success save-button">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="main.js"></script>
+  </body>
+</html>

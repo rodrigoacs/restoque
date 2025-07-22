@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Gerenciar Usuários</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <script>
+      ;(function () {
+        const theme = localStorage.getItem('theme')
+        if (theme === 'dark') {
+          document.body.classList.add('dark-mode')
+        } else if (theme === 'light') {
+          document.body.classList.remove('dark-mode')
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.body.classList.add('dark-mode')
+        }
+      })()
+    </script>
+    <div class="container">
+      <a
+        href="index.html"
+        style="
+          text-decoration: none;
+          color: var(--primary-color);
+          display: block;
+          margin-bottom: 1rem;
+        "
+        >&larr; Voltar para o Estoque</a
+      >
+      <h1>Gerenciamento de Usuários</h1>
+
+      <table class="stock-table">
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Função Atual</th>
+            <th>Alterar Para</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body"></tbody>
+      </table>
+    </div>
+    <script src="admin.js"></script>
+  </body>
+</html>
