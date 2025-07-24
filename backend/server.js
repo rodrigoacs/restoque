@@ -8,7 +8,7 @@ const path = require('path')
 
 const app = express()
 const port = 3000
-const JWT_SECRET = 'sua-chave-secreta-super-dificil-de-adivinhar'
+const JWT_SECRET = process.env.JWT_SECRET
 
 // Middlewares
 app.use(cors())
@@ -17,11 +17,11 @@ app.use(express.static(path.join(__dirname, '..', 'public')))
 
 // Configuração do Pool do PostgreSQL
 const pool = new Pool({
-  user: '',
-  host: '',
-  database: '',
-  password: '',
-  port: 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 })
 
 const authorizeAdmin = (req, res, next) => {
