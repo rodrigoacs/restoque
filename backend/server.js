@@ -10,12 +10,10 @@ const app = express()
 const port = 3000
 const JWT_SECRET = process.env.JWT_SECRET
 
-// Middlewares
 app.use(cors())
 app.use(express.json())
 app.use(express.static(path.join(__dirname, '..', 'public')))
 
-// Configuração do Pool do PostgreSQL
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -25,18 +23,12 @@ const pool = new Pool({
 })
 
 const authorizeAdmin = (req, res, next) => {
-  // Este middleware deve rodar DEPOIS do authenticateToken
   if (req.user.role !== 'administrador') {
     return res.status(403).json({ message: 'Acesso negado. Requer privilégios de administrador.' })
   }
   next()
 }
 
-// ===================================
-// ROTAS DE API
-// ===================================
-
-// Rota de Registro
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body
   if (!username || !password) {
@@ -58,7 +50,6 @@ app.post('/api/register', async (req, res) => {
   }
 })
 
-// Rota de Login
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body
   try {
@@ -84,14 +75,13 @@ app.post('/api/login', async (req, res) => {
   }
 })
 
-// Rota para Buscar Produtos
 app.get('/api/products', authenticateToken, async (req, res) => {
   try {
     let query
     if (req.user.role === 'administrador') {
-      query = 'SELECT * FROM products ORDER BY name ASC'
+      query = 'SELECT * FROM products ORDER BY id ASC'
     } else {
-      query = 'SELECT id, name, quantity FROM products ORDER BY name ASC'
+      query = 'SELECT id, name, quantity, unit FROM products ORDER BY id ASC'
     }
     const result = await pool.query(query)
     res.json(result.rows)
@@ -101,38 +91,61 @@ app.get('/api/products', authenticateToken, async (req, res) => {
   }
 })
 
-// Rota para Atualizar um Produto - VERIFIQUE ESTA LINHA
-app.put('/api/products/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params
-  const { quantity } = req.body
-  const userName = req.user.username
-
-  if (quantity === undefined || quantity < 0) {
-    return res.status(400).send('Quantidade inválida.')
+app.post('/api/products', authenticateToken, authorizeAdmin, async (req, res) => {
+  const { name, quantity, unit } = req.body
+  if (!name || quantity === undefined || !unit) {
+    return res.status(400).json({ message: 'Nome, quantidade e unidade são obrigatórios.' })
   }
   try {
-    const result = await pool.query(
-      'UPDATE products SET quantity = $1, last_modified_by = $2, last_modified_at = NOW() WHERE id = $3 RETURNING *',
-      [quantity, userName, id]
+    const newProduct = await pool.query(
+      'INSERT INTO products (name, quantity, unit, last_modified_by, last_modified_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
+      [name, parseFloat(quantity), unit, req.user.username]
     )
+    res.status(201).json(newProduct.rows[0])
+  } catch (err) { console.error(err); res.status(500).send('Erro no servidor') }
+})
+
+app.put('/api/products/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params
+  const { name, quantity, unit } = req.body
+  const userName = req.user.username
+  const userRole = req.user.role
+
+  try {
+    let query, params
+    if (userRole === 'administrador') {
+      if (!name || quantity === undefined || !unit) {
+        return res.status(400).json({ message: 'Nome, quantidade e unidade são obrigatórios.' })
+      }
+      query = 'UPDATE products SET name = $1, quantity = $2, unit = $3, last_modified_by = $4, last_modified_at = NOW() WHERE id = $5 RETURNING *'
+      params = [name, parseFloat(quantity), unit, userName, id]
+    } else {
+      if (quantity === undefined) {
+        return res.status(400).json({ message: 'Quantidade é obrigatória.' })
+      }
+      query = 'UPDATE products SET quantity = $1, last_modified_by = $2, last_modified_at = NOW() WHERE id = $3 RETURNING *'
+      params = [parseFloat(quantity), userName, id]
+    }
+
+    const result = await pool.query(query, params)
+    if (result.rows.length === 0) return res.status(404).send('Produto não encontrado.')
+    res.json(result.rows[0])
+  } catch (err) { console.error(err); res.status(500).send('Erro no servidor') }
+})
+
+app.delete('/api/products/:id', authenticateToken, authorizeAdmin, async (req, res) => {
+  const { id } = req.params
+  try {
+    const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING *', [id])
     if (result.rows.length === 0) {
       return res.status(404).send('Produto não encontrado.')
     }
-    res.json(result.rows[0])
-  } catch (err) {
-    console.error('Erro ao atualizar produto:', err)
-    res.status(500).send('Erro no servidor')
-  }
+    res.status(200).json({ message: 'Produto deletado com sucesso.', product: result.rows[0] })
+  } catch (err) { console.error(err); res.status(500).send('Erro no servidor') }
 })
 
-// ===================================
-// NOVAS ROTAS DE ADMINISTRAÇÃO
-// ===================================
-
-// Rota para BUSCAR todos os usuários (protegida para admins)
 app.get('/api/users', authenticateToken, authorizeAdmin, async (req, res) => {
   try {
-    // Seleciona colunas essenciais, NUNCA a senha
     const result = await pool.query('SELECT id, username, role FROM users ORDER BY username ASC')
     res.json(result.rows)
   } catch (err) {
@@ -141,12 +154,10 @@ app.get('/api/users', authenticateToken, authorizeAdmin, async (req, res) => {
   }
 })
 
-// Rota para ATUALIZAR a função de um usuário (protegida para admins)
 app.put('/api/users/:id/role', authenticateToken, authorizeAdmin, async (req, res) => {
   const { id } = req.params
   const { role } = req.body
 
-  // Validação para garantir que a função seja válida
   if (role !== 'vendedor' && role !== 'administrador') {
     return res.status(400).json({ message: 'Função inválida.' })
   }
@@ -166,7 +177,6 @@ app.put('/api/users/:id/role', authenticateToken, authorizeAdmin, async (req, re
   }
 })
 
-// Inicia o servidor
 app.listen(port, '0.0.0.0', () => {
   console.log(`Servidor rodando em http://localhost:${port}`)
 })

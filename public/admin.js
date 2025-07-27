@@ -3,14 +3,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const userRole = localStorage.getItem('userRole')
   const usersTableBody = document.getElementById('users-table-body')
 
-  // Proteção de Front-end: se não for admin, volta para a página inicial
   if (userRole !== 'administrador') {
     alert('Acesso negado. Você não é um administrador.')
     window.location.href = 'index.html'
     return
   }
 
-  // Função para carregar e exibir os usuários
   const loadUsers = async () => {
     try {
       const response = await fetch('http://localhost:3000/api/users', {
@@ -22,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const users = await response.json()
-      usersTableBody.innerHTML = '' // Limpa a tabela
+      usersTableBody.innerHTML = ''
 
       users.forEach(user => {
         const row = document.createElement('tr')
@@ -45,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Função para atualizar a função de um usuário
   const updateUserRole = async (userId, newRole) => {
     try {
       const response = await fetch(`http://localhost:3000/api/users/${userId}/role`, {
@@ -61,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('Falha ao atualizar a função.')
       }
 
-      // Recarrega a lista para mostrar a alteração
       loadUsers()
 
     } catch (error) {
@@ -70,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Adiciona um listener na tabela para pegar mudanças nos <select>
   usersTableBody.addEventListener('change', (event) => {
     if (event.target.classList.contains('role-select')) {
       const userId = event.target.dataset.userid
@@ -78,12 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (confirm(`Tem certeza que deseja alterar a função deste usuário para ${newRole}?`)) {
         updateUserRole(userId, newRole)
       } else {
-        // Se o usuário cancelar, recarrega a lista para reverter a mudança no select
         loadUsers()
       }
     }
   })
 
-  // Carrega os usuários ao iniciar a página
   loadUsers()
 })
