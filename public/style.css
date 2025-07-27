@@ -72,10 +72,39 @@ h1 {
   letter-spacing: -0.5px;
 }
 
+.stock-table th:nth-child(1) {
+  width: 5%;
+}
+
+.stock-table th:nth-child(2) {
+  width: 30%;
+}
+
+.stock-table th:nth-child(3) {
+  width: 8%;
+}
+
+.stock-table th:nth-child(4) {
+  width: 8%;
+}
+
+.stock-table th:nth-child(5) {
+  width: 17%;
+}
+
+.stock-table th:nth-child(6) {
+  width: 8%;
+}
+
+.stock-table th:nth-child(7) {
+  width: 18%;
+}
+
 .stock-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1.5rem;
+  table-layout: fixed;
 }
 
 .stock-table th,
