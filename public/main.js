@@ -8,6 +8,39 @@ document.addEventListener('DOMContentLoaded', () => {
     return
   }
 
+  let socket
+  function connectWebSocket() {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const authToken = localStorage.getItem('authToken')
+    if (!authToken) {
+      console.error("Token de autenticação não encontrado para a conexão WebSocket.")
+      return
+    }
+    socket = new WebSocket(`${wsProtocol}//${window.location.host}?token=${authToken}`)
+
+    socket.onopen = () => {
+      console.log('Conexão WebSocket estabelecida.')
+    }
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      if (data.event === 'product_update') {
+        console.log('Recebida notificação de atualização de produto. Recarregando lista...')
+        loadProducts()
+      }
+    }
+
+    socket.onclose = () => {
+      console.log('Conexão WebSocket fechada. Tentando reconectar em 5 segundos...')
+      setTimeout(connectWebSocket, 5000)
+    }
+
+    socket.onerror = (error) => {
+      console.error('Erro no WebSocket:', error)
+      socket.close()
+    }
+  }
+
   const tableBody = document.getElementById('stock-table-body')
   const tableHead = document.querySelector('.stock-table thead')
   const searchInput = document.getElementById('search-input')
@@ -102,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     } catch (error) {
       console.error('Erro ao carregar produtos:', error)
-      const colspan = userRole === 'administrador' ? 6 : 4
+      const colspan = userRole === 'administrador' ? 7 : 4
       tableBody.innerHTML = `<tr><td colspan="${colspan}">Falha ao carregar dados. Verifique o back-end.</td></tr>`
     }
   }
@@ -116,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (!response.ok) throw new Error('Falha ao deletar o produto.')
-      loadProducts()
     } catch (error) {
       console.error('Erro ao deletar produto:', error)
       alert('Não foi possível deletar o produto.')
@@ -187,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(errorData.message || `Falha ao ${isUpdating ? 'atualizar' : 'criar'} produto.`)
       }
       closeModal()
-      loadProducts()
     } catch (error) {
       console.error('Erro no formulário:', error)
       alert(error.message)
@@ -229,4 +260,5 @@ document.addEventListener('DOMContentLoaded', () => {
   buildPageHeader()
   buildTableHeader()
   loadProducts()
+  connectWebSocket()
 })

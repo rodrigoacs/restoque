@@ -5,10 +5,53 @@ const jwt = require('jsonwebtoken')
 const { Pool } = require('pg')
 const authenticateToken = require('./authMiddleware')
 const path = require('path')
+const http = require('http')
+const { WebSocketServer } = require('ws')
+const url = require('url')
 
 const app = express()
 const port = 3000
 const JWT_SECRET = process.env.JWT_SECRET
+
+const server = http.createServer(app)
+const wss = new WebSocketServer({ server })
+
+const broadcast = (data) => {
+  wss.clients.forEach(client => {
+    if (client.readyState === client.OPEN) {
+      client.send(JSON.stringify(data))
+    }
+  })
+}
+
+wss.on('connection', (ws, req) => {
+  const token = url.parse(req.url, true).query.token
+
+  if (!token) {
+    console.log('Tentativa de conexão WebSocket sem token. Conexão rejeitada.')
+    ws.terminate()
+    return
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      console.log('Tentativa de conexão WebSocket com token inválido. Conexão rejeitada.')
+      ws.terminate()
+      return
+    }
+
+    ws.user = decoded
+    console.log(`Cliente '${ws.user.username}' (role: ${ws.user.role}) conectado via WebSocket.`)
+
+    ws.on('close', () => {
+      console.log(`Cliente '${ws.user.username}' desconectado.`)
+    })
+
+    ws.on('error', (error) => {
+      console.error(`Erro no WebSocket do cliente '${ws.user.username}':`, error)
+    })
+  })
+})
 
 app.use(cors())
 app.use(express.json())
@@ -101,6 +144,7 @@ app.post('/api/products', authenticateToken, authorizeAdmin, async (req, res) =>
       'INSERT INTO products (name, quantity, unit, last_modified_by, last_modified_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
       [name, parseFloat(quantity), unit, req.user.username]
     )
+    broadcast({ event: 'product_update' })
     res.status(201).json(newProduct.rows[0])
   } catch (err) { console.error(err); res.status(500).send('Erro no servidor') }
 })
@@ -129,6 +173,8 @@ app.put('/api/products/:id', authenticateToken, async (req, res) => {
 
     const result = await pool.query(query, params)
     if (result.rows.length === 0) return res.status(404).send('Produto não encontrado.')
+
+    broadcast({ event: 'product_update' })
     res.json(result.rows[0])
   } catch (err) { console.error(err); res.status(500).send('Erro no servidor') }
 })
@@ -140,6 +186,8 @@ app.delete('/api/products/:id', authenticateToken, authorizeAdmin, async (req, r
     if (result.rows.length === 0) {
       return res.status(404).send('Produto não encontrado.')
     }
+
+    broadcast({ event: 'product_update' })
     res.status(200).json({ message: 'Produto deletado com sucesso.', product: result.rows[0] })
   } catch (err) { console.error(err); res.status(500).send('Erro no servidor') }
 })
@@ -177,6 +225,7 @@ app.put('/api/users/:id/role', authenticateToken, authorizeAdmin, async (req, re
   }
 })
 
-app.listen(port, '0.0.0.0', () => {
+
+server.listen(port, '0.0.0.0', () => {
   console.log(`Servidor rodando em http://localhost:${port}`)
 })
