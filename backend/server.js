@@ -10,7 +10,7 @@ const { WebSocketServer } = require('ws')
 const url = require('url')
 
 const app = express()
-const port = 3000
+const port = 3020
 const JWT_SECRET = process.env.JWT_SECRET
 
 const server = http.createServer(app)
