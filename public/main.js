@@ -199,8 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
       unit: productUnitInput.value
     }
 
-    const url = isUpdating ? `/api/products/${id}` : '/restoque/api/products'
-    const method = isUpdating ? 'PUT' : 'POST'
+    const url = isUpdating ? `/api/products/${id}` : '/api/products'
+    const method = isUpdating ? 'PATCH' : 'POST'
 
     try {
       const response = await fetch(url, {

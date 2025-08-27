@@ -73,9 +73,9 @@ const authorizeAdmin = (req, res, next) => {
 }
 
 app.get('/ping', (req, res) => {
-  console.log('pong');
-  res.status(200).send('pong');
-});
+  console.log('pong')
+  res.status(200).send('pong')
+})
 
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body
@@ -127,9 +127,9 @@ app.get('/api/products', authenticateToken, async (req, res) => {
   try {
     let query
     if (req.user.role === 'administrador') {
-      query = 'SELECT * FROM products ORDER BY id ASC'
+      query = 'SELECT * FROM products WHERE active = true ORDER BY id asc'
     } else {
-      query = 'SELECT id, name, quantity, unit FROM products ORDER BY id ASC'
+      query = 'SELECT id, name, quantity, unit FROM products WHERE active = true ORDER BY id ASC'
     }
     const result = await pool.query(query)
     res.json(result.rows)
@@ -154,7 +154,7 @@ app.post('/api/products', authenticateToken, authorizeAdmin, async (req, res) =>
   } catch (err) { console.error(err); res.status(500).send('Erro no servidor') }
 })
 
-app.put('/api/products/:id', authenticateToken, async (req, res) => {
+app.patch('/api/products/:id', authenticateToken, async (req, res) => {
   const { id } = req.params
   const { name, quantity, unit } = req.body
   const userName = req.user.username
@@ -187,7 +187,7 @@ app.put('/api/products/:id', authenticateToken, async (req, res) => {
 app.delete('/api/products/:id', authenticateToken, authorizeAdmin, async (req, res) => {
   const { id } = req.params
   try {
-    const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING *', [id])
+    const result = await pool.query('UPDATE products SET active=false WHERE id= $1 RETURNING *', [id])
     if (result.rows.length === 0) {
       return res.status(404).send('Produto não encontrado.')
     }
@@ -207,7 +207,7 @@ app.get('/api/users', authenticateToken, authorizeAdmin, async (req, res) => {
   }
 })
 
-app.put('/api/users/:id/role', authenticateToken, authorizeAdmin, async (req, res) => {
+app.patch('/api/users/:id/role', authenticateToken, authorizeAdmin, async (req, res) => {
   const { id } = req.params
   const { role } = req.body
 

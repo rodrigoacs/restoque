@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const updateUserRole = async (userId, newRole) => {
     try {
       const response = await fetch(`/api/users/${userId}/role`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
