@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const token = localStorage.getItem('authToken')
   const currentUser = localStorage.getItem('username')
   const userRole = localStorage.getItem('userRole')
-
+	
   if (!token) {
     window.location.href = 'login.html'
     return
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error("Token de autenticação não encontrado para a conexão WebSocket.")
       return
     }
-    socket = new WebSocket(`${wsProtocol}//${window.location.host}?token=${authToken}`)
+    socket = new WebSocket(`${wsProtocol}//${window.location.host}/?token=${authToken}`)
 
     socket.onopen = () => {
       console.log('Conexão WebSocket estabelecida.')
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadProducts() {
     try {
-      const response = await fetch('http://localhost:3020/api/products', { headers: { 'Authorization': `Bearer ${token}` } })
+      const response = await fetch('/api/products', { headers: { 'Authorization': `Bearer ${token}` } })
       if (!response.ok) throw new Error('Falha ao carregar produtos.')
       const products = await response.json()
 
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!confirm(`Tem certeza que deseja deletar o produto "${productName}"? Esta ação não pode ser desfeita.`)) return
 
     try {
-      const response = await fetch(`http://localhost:3020/api/products/${productId}`, {
+      const response = await fetch(`/api/products/${productId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
       unit: productUnitInput.value
     }
 
-    const url = isUpdating ? `http://localhost:3020/api/products/${id}` : 'http://localhost:3020/api/products'
+    const url = isUpdating ? `/api/products/${id}` : '/restoque/api/products'
     const method = isUpdating ? 'PUT' : 'POST'
 
     try {

@@ -55,7 +55,7 @@ wss.on('connection', (ws, req) => {
 
 app.use(cors())
 app.use(express.json())
-app.use(express.static(path.join(__dirname, '..', 'public')))
+app.use(express.static(path.join(__dirname, 'public')))
 
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -71,6 +71,11 @@ const authorizeAdmin = (req, res, next) => {
   }
   next()
 }
+
+app.get('/ping', (req, res) => {
+  console.log('pong');
+  res.status(200).send('pong');
+});
 
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body

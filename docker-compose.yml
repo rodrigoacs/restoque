@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend_restoque:
+    build: . 
+    container_name: restoque-backend
+    restart: unless-stopped
+    ports:
+      - "3020:3020"
+    environment:
+      DB_USER: ${DB_USER}
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+    networks:
+     - proxy
+
+
+networks:
+    proxy:
+        external: true

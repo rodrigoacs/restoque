@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('http://localhost:3020/api/users', {
+      const response = await fetch('/api/users', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const updateUserRole = async (userId, newRole) => {
     try {
-      const response = await fetch(`http://localhost:3020/api/users/${userId}/role`, {
+      const response = await fetch(`/api/users/${userId}/role`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
