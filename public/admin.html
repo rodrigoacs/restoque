@@ -32,12 +32,28 @@
       >
       <h1>Gerenciamento de Usuários</h1>
 
-      <table class="stock-table">
+      <div class="user-creation-form">
+        <h2>Criar Novo Usuário</h2>
+        <form id="create-user-form">
+          <div style="margin-bottom: 1rem">
+            <label for="new-username">Usuário:</label>
+            <input type="text" id="new-username" required />
+          </div>
+          <div style="margin-bottom: 1.5rem">
+            <label for="new-password">Senha:</label>
+            <input type="password" id="new-password" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Criar Usuário</button>
+        </form>
+      </div>
+
+      <table class="user-table">
         <thead>
           <tr>
             <th>Usuário</th>
             <th>Função Atual</th>
             <th>Alterar Para</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody id="users-table-body"></tbody>

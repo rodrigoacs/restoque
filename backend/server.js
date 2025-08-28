@@ -101,7 +101,7 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body
   try {
-    const userResult = await pool.query('SELECT * FROM users WHERE username = $1', [username])
+    const userResult = await pool.query('SELECT * FROM users WHERE username = $1 AND active = true', [username])
     if (userResult.rows.length === 0) {
       return res.status(401).json({ message: 'Credenciais inválidas.' })
     }
@@ -199,7 +199,7 @@ app.delete('/api/products/:id', authenticateToken, authorizeAdmin, async (req, r
 
 app.get('/api/users', authenticateToken, authorizeAdmin, async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, username, role FROM users ORDER BY username ASC')
+    const result = await pool.query('SELECT id, username, role FROM users WHERE active = true ORDER BY username ASC')
     res.json(result.rows)
   } catch (err) {
     console.error('Erro ao buscar usuários:', err)
@@ -207,29 +207,78 @@ app.get('/api/users', authenticateToken, authorizeAdmin, async (req, res) => {
   }
 })
 
-app.patch('/api/users/:id/role', authenticateToken, authorizeAdmin, async (req, res) => {
-  const { id } = req.params
-  const { role } = req.body
-
-  if (role !== 'vendedor' && role !== 'administrador') {
-    return res.status(400).json({ message: 'Função inválida.' })
+app.post('/api/users', authenticateToken, authorizeAdmin, async (req, res) => {
+  const { username, password } = req.body
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Usuário e senha são obrigatórios.' })
   }
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const newUser = await pool.query(
+      'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username, role',
+      [username, hashedPassword]
+    )
+    res.status(201).json(newUser.rows[0])
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ message: 'Usuário já existe.' })
+    }
+    console.error('Erro no registro:', error)
+    res.status(500).json({ message: 'Erro interno no servidor' })
+  }
+})
+
+app.patch('/api/users/:id', authenticateToken, authorizeAdmin, async (req, res) => {
+  const { id } = req.params
+  const { role, password } = req.body
 
   try {
-    const result = await pool.query(
-      'UPDATE users SET role = $1 WHERE id = $2 RETURNING id, username, role',
-      [role, id]
-    )
-    if (result.rows.length === 0) {
-      return res.status(404).send('Usuário não encontrado.')
+    if (role) {
+      if (role !== 'vendedor' && role !== 'administrador') {
+        return res.status(400).json({ message: 'Função inválida.' })
+      }
+      const result = await pool.query(
+        'UPDATE users SET role = $1 WHERE id = $2 RETURNING id, username, role',
+        [role, id]
+      )
+      if (result.rows.length === 0) {
+        return res.status(404).send('Usuário não encontrado.')
+      }
+      return res.json(result.rows[0])
     }
-    res.json(result.rows[0])
+
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10)
+      const result = await pool.query(
+        'UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, username, role',
+        [hashedPassword, id]
+      )
+      if (result.rows.length === 0) {
+        return res.status(404).send('Usuário não encontrado.')
+      }
+      return res.json(result.rows[0])
+    }
+
+    res.status(400).json({ message: 'Nenhuma ação especificada.' })
   } catch (err) {
-    console.error('Erro ao atualizar função do usuário:', err)
+    console.error('Erro ao atualizar usuário:', err)
     res.status(500).send('Erro no servidor')
   }
 })
 
+app.delete('/api/users/:id', authenticateToken, authorizeAdmin, async (req, res) => {
+  const { id } = req.params
+  try {
+    const result = await pool.query('UPDATE users SET active=false WHERE id = $1 RETURNING *', [id])
+    if (result.rows.length === 0) {
+      return res.status(404).send('Usuário não encontrado.')
+    }
+    res.status(200).json({ message: 'Usuário deletado com sucesso.', user: result.rows[0] })
+  } catch (err) {
+    console.error('Erro ao deletar usuário:', err)
+    res.status(500).send('Erro no servidor')
+  }
+})
 
 server.listen(port, '0.0.0.0', () => {
   console.log(`Servidor rodando em http://localhost:${port}`)

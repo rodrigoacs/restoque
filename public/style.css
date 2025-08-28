@@ -72,6 +72,37 @@ h1 {
   letter-spacing: -0.5px;
 }
 
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  table-layout: fixed;
+}
+
+.user-table th,
+.user-table td {
+  padding: 0.9rem 1rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  transition: border-color var(--transition-speed) ease;
+}
+
+.user-table th {
+  font-weight: 600;
+  background-color: var(--surface-color);
+  color: var(--text-color-light);
+  border-bottom-width: 2px;
+}
+
+.user-table tbody tr {
+  transition: background-color var(--transition-speed) ease;
+}
+
+.user-table tbody tr:hover {
+  background-color: rgba(108, 117, 125, 0.1);
+}
+
 .stock-table th:nth-child(1) {
   width: 5%;
 }
@@ -343,6 +374,26 @@ select:focus {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.user-creation-form {
+  background-color: var(--background-color);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-color);
+}
+
+.user-creation-form h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  font-size: 1.5rem;
+}
+
+.stock-table td:last-child {
+  display: flex;
+  gap: 10px;
 }
 
 @media (max-width: 768px) {
